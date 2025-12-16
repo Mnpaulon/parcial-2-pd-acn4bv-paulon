@@ -1,5 +1,5 @@
 
-// server/db/database.js
+
 import sqlite3 from "sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -10,6 +10,8 @@ sqlite3.verbose();
 // Resolver ruta absoluta del archivo de base de datos
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// ✅ DB persistente en server/db/database.db
 const DB_PATH = path.join(__dirname, "database.db");
 
 // Crear conexión a la base de datos
@@ -17,12 +19,17 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
   if (err) {
     console.error("❌ Error conectando a SQLite:", err);
   } else {
-    console.log("✅ Conectado a SQLite en", DB_PATH);
+    console.log("✅ Conectado a SQLite en:", DB_PATH);
   }
 });
 
 db.serialize(() => {
- 
+  // ✅ Recomendado en SQLite
+  db.run("PRAGMA foreign_keys = ON;");
+  db.run("PRAGMA journal_mode = WAL;");
+  db.run("PRAGMA busy_timeout = 5000;");
+
+
   // TABLA CATEGORIAS
 
   db.run(
@@ -47,6 +54,8 @@ db.serialize(() => {
       stock INTEGER NOT NULL,
       categoria_id INTEGER NOT NULL,
       FOREIGN KEY (categoria_id) REFERENCES categorias(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
     )`,
     (err) => {
       if (err) console.error("❌ Error creando tabla productos:", err);
@@ -73,13 +82,14 @@ db.serialize(() => {
 
   // SEED: categorias por defecto
 
-  db.all("SELECT COUNT(*) AS total FROM categorias", (err, rows) => {
+  db.get("SELECT COUNT(*) AS total FROM categorias", (err, row) => {
     if (err) {
       console.error("❌ Error contando categorias:", err);
       return;
     }
 
-    const total = rows?.[0]?.total ?? 0;
+    const total = row?.total ?? 0;
+
     if (total === 0) {
       const defaults = ["Electrónica", "Hogar", "Deportes", "Otros"];
       const stmt = db.prepare("INSERT INTO categorias (nombre) VALUES (?)");
@@ -93,17 +103,20 @@ db.serialize(() => {
 
 
   // SEED: admin por defecto si no hay usuarios
-
-  db.get("SELECT COUNT(*) AS total FROM usuarios", async (err, row) => {
+ 
+  db.get("SELECT COUNT(*) AS total FROM usuarios", (err, row) => {
     if (err) {
       console.error("❌ Error contando usuarios:", err);
       return;
     }
 
     const total = row?.total ?? 0;
+
+    //  Solo crea admin si NO hay ningún usuario
     if (total === 0) {
       try {
-        const hash = await bcrypt.hash("1234", 10);
+        const hash = bcrypt.hashSync("1234", 10);
+
         db.run(
           "INSERT INTO usuarios (username, password_hash, role) VALUES (?,?,?)",
           ["admin", hash, "admin"],

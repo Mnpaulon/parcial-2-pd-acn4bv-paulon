@@ -103,13 +103,13 @@ db.serialize(() => {
     const total = row?.total ?? 0;
     if (total === 0) {
       try {
-        const hash = await bcrypt.hash("admin123", 10);
+        const hash = await bcrypt.hash("1234", 10);
         db.run(
           "INSERT INTO usuarios (username, password_hash, role) VALUES (?,?,?)",
           ["admin", hash, "admin"],
           (err2) => {
             if (err2) console.error("❌ Error creando admin seed:", err2);
-            else console.log("✔ Usuario admin por defecto creado (admin/admin123)");
+            else console.log("✔ Usuario admin por defecto creado (admin/1234)");
           }
         );
       } catch (e) {

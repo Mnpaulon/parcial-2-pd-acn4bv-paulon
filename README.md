@@ -117,3 +117,24 @@ cd server
 npm install
 npm run dev
 
+## 🗄 Persistencia de datos (SQLite)
+
+La aplicación utiliza **SQLite** como base de datos relacional local.
+
+- Los datos se almacenan en el archivo:
+
+- Este archivo **no se versiona en Git** (está incluido en `.gitignore`) por buenas prácticas.
+- Mientras el archivo `database.db` exista, **los usuarios y productos creados se mantienen entre reinicios del servidor**.
+- Si el archivo se elimina, el sistema:
+- recrea automáticamente las tablas
+- inserta categorías por defecto
+- crea un usuario administrador inicial
+
+### Usuario administrador por defecto
+- **Usuario:** `admin`
+- **Contraseña:** `1234`
+
+Este comportamiento es intencional y permite levantar el proyecto desde cero sin configuración adicional.
+
+
+

@@ -29,6 +29,11 @@ build/
 *.sqlite3
 server/db/database.db
 
+# SQLite WAL mode files
+*.db-wal
+*.db-shm
+
+
 # =====================
 # Environment variables
 # =====================

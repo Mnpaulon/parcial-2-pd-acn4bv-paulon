@@ -1,202 +1,119 @@
-# 📦 Inventario de Productos –  TP2
+# 📦 ENTREGA FINAL — Sistema de Gestión de Inventario
 
-**Alumno:** Matías Paulon
-
-**Materia:** Plataformas de Desarrollo
-
-**Proyecto individual** – 
+Proyecto desarrollado como **Entrega Final** para la materia **Plataforma de Desarrollo - Web / Backend**.  
+La aplicación implementa un sistema **full stack** de gestión de inventario con autenticación, control de roles y base de datos relacional.
 
 ---
 
-## Descripción General
+## 🚀 Tecnologías utilizadas
 
-El TP2 consiste en el desarrollo de un **sistema completo de inventario**, dividido en **backend (Node + Express)** y **frontend (React)**, incorporando:
+### Backend
+- **Node.js**
+- **Express**
+- **SQLite** (Base de datos relacional)
+- **JWT (JSON Web Tokens)** para autenticación
+- **bcryptjs** para hash de contraseñas
 
-- API REST real  
-- Autenticación con **JWT**  
-- Sistema de **roles** (admin / usuario)  
-- CRUD de productos  
-- CRUD de usuarios (solo admin)  
-- Persistencia en archivos JSON  
-- Interfaz moderna con React  
-- Rutas protegidas (PrivateRoute)  
-- Validación de permisos
-
-El proyecto funciona como un **panel administrativo real**, permitiendo gestionar productos y usuarios de manera segura.
-
----
-
-
-2. Estructura del Proyecto
-
-parcial-2-pd-acn4bv-paulon/
-├── client/       ← FRONTEND React (no contiene datos persistentes)
-├── server/       ← BACKEND Node (acá viven los JSON de datos reales)
-│   ├── productos.json   ← Persistencia real del sistema
-│   └── usuarios.json    ← Persistencia real del sistema
-├── src/          ← TP1 (versión previa del proyecto, sin backend)
-└── docs/         ← Informes y documentación
-
-
-#  3. Arquitectura del Sistema
-
-## 🖥 Frontend (React)
-- React + Vite  
-- Contexto de autenticación (`AuthContext`)  
-- Login persistido con localStorage  
-- Sidebar + pestañas ("Productos" / "Usuarios")  
-- Formularios separados para crear y editar productos  
-- Tablas dinámicas y buscador en tiempo real  
-- Mensajes globales de éxito/error  
-- Protecciones visuales según rol
-
-**Rutas:**
-/login
-/inventario (protegida)
-/ (redirecciona)
-
-
-**Protección de rutas:**  
-Se implementa `PrivateRoute` para bloquear todo el panel si el usuario no está logueado.
+### Frontend
+- **React**
+- **React Router**
+- **Fetch API**
+- **CSS personalizado** (interfaz tipo panel administrativo)
 
 ---
 
-## 🖧 Backend (Node + Express)
+## 🗄️ Base de Datos (SQLite)
 
-### Endpoints:
-POST /api/login
-GET /api/productos
-POST /api/productos
-PUT /api/productos/:id
-DELETE /api/productos/:id
+El sistema utiliza una **base de datos relacional SQLite**, creada automáticamente al iniciar el servidor.
 
-GET /api/usuarios (solo admin)
-POST /api/usuarios (solo admin)
-DELETE /api/usuarios/:id (solo admin)
+### Tablas implementadas
 
+#### 📁 `categorias`
+- `id` (PK)
+- `nombre` (único)
 
-### Middlewares:
-- `verificarToken` → valida el JWT  
-- `soloAdmin` → limita acceso según rol  
+#### 📦 `productos`
+- `id` (PK)
+- `nombre`
+- `precio`
+- `stock`
+- `categoria_id` (FK → categorias.id)
 
-### Persistencia:
-- `productos.json`  
-- `usuarios.json`
+Relación **uno a muchos** entre categorías y productos.
 
----
-
-#  4. Sistema de Roles (Nuevo en TP2)
-
-Se eliminaron roles innecesarios y se estableció un esquema simple y claro:
-
-| Acción | admin | usuario |
-|--------|--------|---------|
-| Ver productos | ✔ | ✔ |
-| Crear productos | ✔ | ✔ |
-| Editar productos | ✔ | ✔ |
-| Eliminar productos | ✔ | ✔ |
-| Ver usuarios | ✔ | ❌ |
-| Crear usuarios | ✔ | ❌ |
-| Eliminar usuarios | ✔ | ❌ |
-
-**Reglas especiales:**
-- No se puede eliminar al **único admin** existente.  
-- Un admin **no puede eliminar su propia cuenta**.  
+#### 👤 `usuarios`
+- `id` (PK)
+- `username` (único)
+- `password_hash` (contraseña encriptada)
+- `role` (`admin` | `usuario`)
 
 ---
 
-#  5. Funcionalidades Implementadas
+## 👤 Usuario administrador por defecto
 
-##  5.1 Gestión de Productos (CRUD)
-- Alta de productos  
-- Edición individual  
-- Eliminación con confirmación  
-- Filtro por nombre en tiempo real  
-- Tarjetas informativas:  
-  - total de productos  
-  - stock global  
-  - valor total del inventario  
+Si la base de datos no contiene usuarios, el sistema crea automáticamente:
 
-Toda la edición requiere estar logueado.
+- **Usuario:** `admin`
+- **Contraseña:** `1234`
+- **Rol:** `admin`
+
+Las contraseñas se almacenan **hasheadas con bcrypt**, no en texto plano.
 
 ---
 
-##  5.2 Gestión de Usuarios (Solo Admin)
-Incluye:
+## 🔐 Autenticación y control de acceso
 
-- Listado completo de usuarios  
-- Creación de usuarios (admin / usuario)  
-- Eliminación con restricciones  
-- Prevención de auto-eliminación  
-- Prevención de eliminar al último admin  
+- Login mediante **JWT**
+- El token debe enviarse en cada request protegida:
 
----
 
-##  5.3 Login y Autenticación
-- Login con username + password  
-- Validación en backend  
-- JWT almacenado en localStorage  
-- Rutas protegidas tanto en frontend como en backend  
+### Roles
+- **admin**
+- Gestión completa de productos
+- Gestión completa de usuarios
+- **usuario**
+- Gestión de productos
+- Sin acceso a la gestión de usuarios
 
 ---
 
-# 6. Modelos de Datos
+## 📡 Endpoints principales
 
-## Usuario
+### Autenticación
+- `POST /api/login`
 
-{
-  "id": 123456,
-  "username": "admin",
-  "password": "1234",
-  "role": "admin"
-}
+### Productos
+- `GET /api/productos`
+- `GET /api/productos/:id`
+- `POST /api/productos` *(requiere login)*
+- `PUT /api/productos/:id` *(requiere login)*
+- `DELETE /api/productos/:id` *(requiere login)*
 
-Producto
-{
-  "id": 7890,
-  "nombre": "Teclado",
-  "categoria": "Accesorios",
-  "precio": 15000,
-  "stock": 8
-}
-
- 7. Seguridad Implementada
-
-Autenticación JWT en backend
-Validación de token en cada request
-PrivateRoute en frontend
-Validación de roles (soloAdmin)
-Restricción de acciones peligrosas
-Limpieza de roles obsoletos (lector/editor)
-
-8. Interfaz y Experiencia de Usuario
-
-Sidebar responsive
-Pestañas dinámicas
-Botones estilizados (primary, ghost, danger)
-Alertas flotantes para feedback
-Diseño claro y moderno
-Indicadores de inventario
-Modo lectura para usuarios no logueados
-
- 9. Conclusión
-
-El TP2 llevó el proyecto inicial a un nivel profesional:
-
-De un inventario simple pasó a un sistema administrativo completo.
-Se integró autenticación, roles y persistencia real.
-Se desarrolló un panel moderno y seguro.
-Se aplicaron conceptos de frontend, backend, seguridad y arquitectura.
-El sistema queda preparado para futuras ampliaciones, como base de datos real, hash de contraseñas y módulos adicionales.
-
-10. Mejoras Futuras Posibles
-
-Hash de contraseñas (bcrypt)
-Migración a MongoDB o PostgreSQL
-Logs de auditoría
-Dashboard con gráficos
-Sistema de movimientos de stock
-Exportar inventario a Excel
-
+### Usuarios (solo administradores)
+- `GET /api/usuarios`
+- `POST /api/usuarios`
+- `DELETE /api/usuarios/:id`
 
 ---
+
+## 🖥️ Frontend
+
+- Login obligatorio
+- Panel de inventario con:
+- Listado de productos
+- Alta, edición y eliminación
+- Vista de detalle de producto
+- Panel de **Gestión de Usuarios** visible solo para administradores
+- Manejo de errores (401 / 403)
+- Interfaz tipo **panel administrativo**
+
+---
+
+## ▶️ Cómo ejecutar el proyecto
+
+### Backend
+```bash
+cd server
+npm install
+npm run dev
+
